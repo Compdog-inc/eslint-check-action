@@ -147,6 +147,7 @@ class EslintRunner {
       for (let msg of messages) {
         const { ruleId, message, severity, endLine, line } = msg;
 
+        if(endLine || line){
         const annotation: GitHubAnnotation = {
           path,
           start_line: line,
@@ -156,6 +157,7 @@ class EslintRunner {
         };
 
         githubAnnotations.push(annotation);
+        }
       }
     });
 
