@@ -1,8 +1,9 @@
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
-import { error as logError } from '@actions/core';
+import { error as logError, notice as logNotice } from '@actions/core';
 import { ESLint } from 'eslint';
 import path from 'path';
+import { readdirSync } from 'fs';
 
 class EslintRunner {
   private name = 'Eslint Run';
@@ -123,6 +124,22 @@ class EslintRunner {
       extensions: this.opts.eslintExtensions,
       cwd: this.opts.repoPath,
     };
+
+    console.log("CWD: " + this.opts.repoPath);
+    logNotice("CWD: " + this.opts.repoPath);
+
+    readdirSync(this.opts.repoPath).forEach(file => {
+      console.log("FL: " + file);
+      logNotice("FL: " + file);
+    });
+
+    console.log("CWDP: " + path.dirname(this.opts.repoPath));
+    logNotice("CWDP: " + path.dirname(this.opts.repoPath));
+
+    readdirSync(path.dirname(this.opts.repoPath)).forEach(file => {
+      console.log("FLP: " + file);
+      logNotice("FLP: " + file);
+    });
 
     try {
 
