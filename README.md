@@ -25,7 +25,7 @@ jobs:
     - name: Checkout 
       uses: actions/checkout@v1
     - name: Lint
-      uses: Krizzu/eslint-check-action@v1.1.0
+      uses: Compdog-inc/eslint-check-action@v1.1.1
       with:
         ghToken: ${{ secrets.GITHUB_TOKEN }}
         eslintFiles: "lib, scripts"
