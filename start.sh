@@ -8,6 +8,6 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
-cd "/eslint_check_action" || exit
+# cd "/eslint_check_action" || exit
 
 node "/eslint_check_action/dist/index.js"

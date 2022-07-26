@@ -2,7 +2,7 @@ FROM node:16-slim
 
 COPY . /eslint_check_action
 
-WORKDIR /github/workspace
+WORKDIR /eslint_check_action
 
 LABEL maintainer="Krzysztof Borowy <dev@krizzu.dev>"
 LABEL com.github.actions.name="ESLint check"
