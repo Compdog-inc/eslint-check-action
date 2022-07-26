@@ -20,7 +20,7 @@ class EslintRunner {
 
   run = async () => {
     this.checkRunID = await this.startGitHubCheck();
-    const report = this.runEslintCheck()!;
+    const report = await this.runEslintCheck()!;
     const { success, annotations, counts } = this.prepareAnnotation(report);
 
     // if annotations are too large, split them into check-updates
@@ -116,7 +116,7 @@ class EslintRunner {
     return path.resolve(this.opts.repoPath, location);
   };
 
-  private runEslintCheck = () => {
+  private runEslintCheck = async () => {
     const cliOptions: ESLint.Options = {
       useEslintrc: false,
       overrideConfigFile: this.pathRelative(this.opts.eslintConfig),
@@ -129,7 +129,7 @@ class EslintRunner {
       const cli = new ESLint(cliOptions);
       const lintFiles = this.opts.eslintFiles.map(this.pathRelative);
 
-      return cli.lintFiles(lintFiles);
+      return await cli.lintFiles(lintFiles);
     } catch (e) {
       exitWithError(e.message);
 
@@ -137,36 +137,45 @@ class EslintRunner {
     }
   };
 
-  private prepareAnnotation = (report: eslint.CLIEngine.LintReport) => {
+  private prepareAnnotation = (results: ESLint.LintResult[] | null) => {
     // 0 - no error, 1 - warning, 2 - error
     const reportLevel = ['', 'warning', 'failure'];
 
     const githubAnnotations: Array<GitHubAnnotation> = [];
-    report.results.forEach(result => {
-      const { filePath, messages } = result;
-      const path = filePath.replace(`${this.opts.repoPath}/`, '');
 
-      for (let msg of messages) {
-        const { ruleId, message, severity, endLine, line } = msg;
+    let errorCount = 0;
+    let warningCount = 0;
 
-        const annotation: GitHubAnnotation = {
-          path,
-          start_line: line || 0,
-          end_line: endLine || line || 0,
-          annotation_level: reportLevel[severity] as GitHubAnnotationLevel,
-          message: `${ruleId}: ${message}`,
-        };
+    if (results !== null) {
+      results.forEach(result => {
+        errorCount += result.errorCount;
+        warningCount += result.warningCount;
 
-        githubAnnotations.push(annotation);
-      }
-    });
+        const { filePath, messages } = result;
+        const path = filePath.replace(`${this.opts.repoPath}/`, '');
+
+        for (let msg of messages) {
+          const { ruleId, message, severity, endLine, line } = msg;
+
+          const annotation: GitHubAnnotation = {
+            path,
+            start_line: line || 0,
+            end_line: endLine || line || 0,
+            annotation_level: reportLevel[severity] as GitHubAnnotationLevel,
+            message: `${ruleId}: ${message}`,
+          };
+
+          githubAnnotations.push(annotation);
+        }
+      });
+    }
 
     return {
-      success: report.errorCount === 0,
+      success: errorCount === 0,
       annotations: githubAnnotations,
       counts: {
-        error: report.errorCount,
-        warning: report.warningCount,
+        error: errorCount,
+        warning: warningCount,
       },
     };
   };
