@@ -5,7 +5,7 @@ cd $GITHUB_WORKSPACE
 
 if [ ! -d "node_modules" ]; then
     echo "Repo dependencies not installed. Installing..."
-    yarn install
+    npm install
 fi
 
 cd "/eslint_check_action" || exit

@@ -1,19 +1,20 @@
-import { GitHub } from '@actions/github';
+import * as github from '@actions/github';
+import { GitHub } from '@actions/github/lib/utils';
 import { error as logError } from '@actions/core';
-import eslint from 'eslint';
+import { ESLint } from 'eslint';
 import path from 'path';
 
 class EslintRunner {
   private name = 'Eslint Run';
 
-  private kit: GitHub;
+  private kit: InstanceType<typeof GitHub>;
 
   private opts: ActionOptionsType;
 
   checkRunID: number = -1;
 
   constructor(ghToken: string, options: ActionOptionsType) {
-    this.kit = new GitHub(ghToken);
+    this.kit = github.getOctokit(ghToken);
     this.opts = options;
   }
 
@@ -51,7 +52,7 @@ class EslintRunner {
     counts: ReportCounts
   ) => {
     try {
-      await this.kit.checks.update({
+      await this.kit.rest.checks.update({
         owner: this.opts.repoOwner,
         repo: this.opts.repoName,
         check_run_id: this.checkRunID,
@@ -70,7 +71,7 @@ class EslintRunner {
   private startGitHubCheck = async () => {
     let runId = -1;
     try {
-      const response = await this.kit.checks.create({
+      const response = await this.kit.rest.checks.create({
         name: this.name,
         head_sha: this.opts.prSha,
         repo: this.opts.repoName,
@@ -93,7 +94,7 @@ class EslintRunner {
     counts: ReportCounts
   ) => {
     try {
-      await this.kit.checks.update({
+      await this.kit.rest.checks.update({
         owner: this.opts.repoOwner,
         repo: this.opts.repoName,
         check_run_id: this.checkRunID,
@@ -116,18 +117,19 @@ class EslintRunner {
   };
 
   private runEslintCheck = () => {
-    const cliOptions = {
+    const cliOptions: ESLint.Options = {
       useEslintrc: false,
-      configFile: this.pathRelative(this.opts.eslintConfig),
+      overrideConfigFile: this.pathRelative(this.opts.eslintConfig),
       extensions: this.opts.eslintExtensions,
       cwd: this.opts.repoPath,
     };
 
     try {
-      const cli = new eslint.CLIEngine(cliOptions);
+
+      const cli = new ESLint(cliOptions);
       const lintFiles = this.opts.eslintFiles.map(this.pathRelative);
 
-      return cli.executeOnFiles(lintFiles);
+      return cli.lintFiles(lintFiles);
     } catch (e) {
       exitWithError(e.message);
 
@@ -149,7 +151,7 @@ class EslintRunner {
 
         const annotation: GitHubAnnotation = {
           path,
-          start_line: line||0,
+          start_line: line || 0,
           end_line: endLine || line || 0,
           annotation_level: reportLevel[severity] as GitHubAnnotationLevel,
           message: `${ruleId}: ${message}`,

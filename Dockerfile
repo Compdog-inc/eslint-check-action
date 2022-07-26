@@ -10,8 +10,8 @@ LABEL com.github.actions.description="Runs ESlint check in your project and anno
 LABEL com.github.actions.icon="octagon"
 LABEL com.github.actions.color="green"
 
-RUN ["yarn", "install"]
+RUN ["npm", "install"]
 
-RUN ["yarn", "build"]
+RUN ["npm", "run", "build"]
 
 ENTRYPOINT ["/eslint_check_action/start.sh"]
